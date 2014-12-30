@@ -23,15 +23,19 @@ SetupOCXFile=
 [Comment]
 
 [Script]
+// for 480x800
 wd = Plugin.Window.Find("SDL_app", "5554:q")
-If wd > 0 Then 
-	If "00AEFF" = Plugin.Bkgnd.GetPixelColor(wd, 300, 300) Then
-		Call Plugin.Bkgnd.LeftClick(wd, 300, 425)
-	Else 
-		choice = Int((4 * Rnd) + 0)
-		Call Plugin.Bkgnd.LeftClick(wd, 300, 325 + choice * 100)
-		Call Plugin.Bkgnd.LeftClick(wd, 250, 750)
-	End If
+If wd > 0 Then
+    // click 挑战
+    If "00AEFF" = Plugin.Bkgnd.GetPixelColor(wd, 300, 300) Then
+        Call Plugin.Bkgnd.LeftClick(wd, 300, 425)
+    Else
+        choice = Int((4 * Rnd) + 0)
+        // click 问题选项
+        Call Plugin.Bkgnd.LeftClick(wd, 300, 325 + choice * 100)
+        // click 再来一盘
+        Call Plugin.Bkgnd.LeftClick(wd, 250, 750)
+    End If
 
 End If
 Delay(7000)

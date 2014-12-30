@@ -1,0 +1,31 @@
+# Project: lolking_area
+# Makefile created by Dev-C++ 5.5.3
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = cJSON.o lolking_area.o
+LINKOBJ  = cJSON.o lolking_area.o
+LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW32/mingw32/lib" -static-libstdc++ -static-libgcc -L"E:/WpdPack/Lib" -g3
+INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"." -I"E:/WpdPack/Include"
+CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW32/lib/gcc/mingw32/4.7.2/include/c++" -I"." -I"E:/WpdPack/Include"
+BIN      = lolking_area.exe
+CXXFLAGS = $(CXXINCS) -g3 -lm -lwpcap
+CFLAGS   = $(INCS) -g3 -lwpcap -lm
+RM       = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS) $(CXXFLAGS)
+
+cJSON.o: cJSON.c
+	$(CC) -c cJSON.c -o cJSON.o $(CFLAGS)
+
+lolking_area.o: lolking_area.c
+	$(CC) -c lolking_area.c -o lolking_area.o $(CFLAGS)
