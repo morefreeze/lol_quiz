@@ -18,79 +18,79 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 
 int main(int argc, char **argv)
 {
-    pcap_if_t *alldevs;
-    pcap_if_t *d;
-    int inum;
-    int i=0;
-    pcap_t *adhandle;
-    char errbuf[PCAP_ERRBUF_SIZE];
+	pcap_if_t *alldevs;
+	pcap_if_t *d;
+	int inum;
+	int i=0;
+	pcap_t *adhandle;
+	char errbuf[PCAP_ERRBUF_SIZE];
+	
+	/* Retrieve the device list */
+	if(pcap_findalldevs(&alldevs, errbuf) == -1)
+	{
+		fprintf(stderr,"Error in pcap_findalldevs: %s\n", errbuf);
+		exit(1);
+	}
+	/* Print the list */
+	for(d=alldevs; d; d=d->next)
+	{
+		printf("%d. %s", ++i, d->name);
+		if (d->description)
+			printf(" (%s)\n", d->description);
+		else
+			printf(" (No description available)\n");
+	}
+	inum = 1;
+	if(inum < 1 || inum > i)
+	{
+		printf("\nInterface number out of range.\n");
+		/* Free the device list */
+		pcap_freealldevs(alldevs);
+		return -1;
+	}
+	
+	/* Jump to the selected adapter */
+	for(d=alldevs, i=0; i< inum-1 ;d=d->next, i++);
+	
+	/* Open the device */
+	/* Open the adapter */
+	if ((adhandle= pcap_open_live(d->name,	// name of the device
+							 65536,			// portion of the packet to capture. 
+											// 65536 grants that the whole packet will be captured on all the MACs.
+							 1,				// promiscuous mode (nonzero means promiscuous)
+							 1000,			// read timeout
+							 errbuf			// error buffer
+							 )) == NULL)
+	{
+		fprintf(stderr,"\nUnable to open the adapter. %s is not supported by WinPcap\n", d->name);
+		pcap_freealldevs(alldevs);
+		return -1;
+	}
+	
+	printf("\nlistening on %s...\n", d->description);
+	
+	/*
+	pcap_t *fp;
+	if ((fp = pcap_open_offline("lolking0.pcap",			// name of the device
+						 errbuf					// error buffer
+						 )) == NULL)
+	{
+		fprintf(stderr,"\nUnable to open the file %s.\n", argv[1]);
+		return -1;
+	}
 
-    /* Retrieve the device list */
-    if(pcap_findalldevs(&alldevs, errbuf) == -1)
-    {
-        fprintf(stderr,"Error in pcap_findalldevs: %s\n", errbuf);
-        exit(1);
-    }
-    /* Print the list */
-    for(d=alldevs; d; d=d->next)
-    {
-        printf("%d. %s", ++i, d->name);
-        if (d->description)
-            printf(" (%s)\n", d->description);
-        else
-            printf(" (No description available)\n");
-    }
-    inum = 1;
-    if(inum < 1 || inum > i)
-    {
-        printf("\nInterface number out of range.\n");
-        /* Free the device list */
-        pcap_freealldevs(alldevs);
-        return -1;
-    }
+	pcap_loop(fp, 0, packet_handler, NULL);
 
-    /* Jump to the selected adapter */
-    for(d=alldevs, i=0; i< inum-1 ;d=d->next, i++);
-
-    /* Open the device */
-    /* Open the adapter */
-    if ((adhandle= pcap_open_live(d->name,	// name of the device
-                    65536,			// portion of the packet to capture. 
-                    // 65536 grants that the whole packet will be captured on all the MACs.
-                    1,				// promiscuous mode (nonzero means promiscuous)
-                    1000,			// read timeout
-                    errbuf			// error buffer
-                    )) == NULL)
-    {
-        fprintf(stderr,"\nUnable to open the adapter. %s is not supported by WinPcap\n", d->name);
-        pcap_freealldevs(alldevs);
-        return -1;
-    }
-
-    printf("\nlistening on %s...\n", d->description);
-
-    /*
-       pcap_t *fp;
-       if ((fp = pcap_open_offline("lolking0.pcap",			// name of the device
-       errbuf					// error buffer
-       )) == NULL)
-       {
-       fprintf(stderr,"\nUnable to open the file %s.\n", argv[1]);
-       return -1;
-       }
-
-       pcap_loop(fp, 0, packet_handler, NULL);
-
-       pcap_close(fp);
-       */
-
-    /* At this point, we don't need any more the device list. Free it */
-    pcap_freealldevs(alldevs);
-
-    /* start the capture */
-    pcap_loop(adhandle, 0, packet_handler, NULL);
-
-    pcap_close(adhandle);
+	pcap_close(fp);
+	*/
+	
+	/* At this point, we don't need any more the device list. Free it */
+	pcap_freealldevs(alldevs);
+	
+	/* start the capture */
+	pcap_loop(adhandle, 0, packet_handler, NULL);
+	
+	pcap_close(adhandle);
 
     system("pause");
     return 42;
@@ -99,25 +99,27 @@ int main(int argc, char **argv)
 /* Callback function invoked by libpcap for every incoming packet */
 void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data)
 {
-    struct tm *ltime;
-    char timestr[16];
-    time_t local_tv_sec;
+	struct tm *ltime;
+	char timestr[16];
+	time_t local_tv_sec;
 
-    /*
-     * unused parameters
-     */
-    (VOID)(param);
-    (VOID)(pkt_data);
+	/*
+	 * unused parameters
+	 */
+	(VOID)(param);
+	(VOID)(pkt_data);
 
-    /* convert the timestamp to readable format */
-    local_tv_sec = header->ts.tv_sec;
-    ltime=localtime(&local_tv_sec);
-    strftime( timestr, sizeof timestr, "%H:%M:%S", ltime);
-
-    //printf("%s,%.6d len:%d\n", timestr, header->ts.tv_usec, header->len);
-    int ignore_len = 14 + 20 + 20;
-    if (header->len <= ignore_len)
-        return ;
+	/* convert the timestamp to readable format */
+	local_tv_sec = header->ts.tv_sec;
+	ltime=localtime(&local_tv_sec);
+	strftime( timestr, sizeof timestr, "%H:%M:%S", ltime);
+	
+	//printf("%s,%.6d len:%d\n", timestr, header->ts.tv_usec, header->len);
+	int ignore_len = 14 + 20;
+	int tcp_len = (pkt_data[ignore_len+12] >> 4) * 4;
+	ignore_len += tcp_len;
+	if (header->len <= ignore_len)
+	   return ;
     const u_char *wb_data = pkt_data+ignore_len;
     u_char is_wb = wb_data[0];
     //printf("%x\n", is_wb);
@@ -133,23 +135,35 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
     if ('{' != wb_data[2])
         return ;
     if (0 == strncmp("{\"gameId", (char*)(wb_data+2), strlen("{\"gameId"))
-            || 0 == strncmp("{\"questionAnswerWrap", (char*)(wb_data+2), strlen("{\"questionAnswerWrap"))
-       ){
-        char s_json[wb_len+1];
-        strncpy(s_json, (char*)(wb_data+2), sizeof(u_char)*wb_len);
-
-        cJSON *root = cJSON_Parse(s_json);
-        cJSON *questionList = cJSON_GetObjectItem(root, "questList");
-        if (NULL != questionList){
-            cJSON *questionId = cJSON_GetObjectItem(questionList->child, "id");
-            if (NULL != questionId)
-                printf("gameId %d\n", questionId->valueint);
-            else
-                printf("%s\n", s_json);
-        }
-        else
-            printf("%s\n", s_json);
-
+     || 0 == strncmp("{\"questionAnswerWrap", (char*)(wb_data+2), strlen("{\"questionAnswerWrap"))
+     || 0 == strncmp("{\"playerAnswerWrapList", (char*)(wb_data+2), strlen("{\"playerAnswerWrapList"))
+     ){
+     	char s_json[wb_len+1];
+     	strncpy(s_json, (char*)(wb_data+2), sizeof(u_char)*wb_len);
+     	//printf("%s\n", s_json);
+     	cJSON *root = cJSON_Parse(s_json);
+     	cJSON *questionList = cJSON_GetObjectItem(root, "questList");
+     	if (NULL != questionList){
+     		cJSON *questionId = cJSON_GetObjectItem(questionList->child, "id");
+     		if (NULL != questionId){
+     			printf("questionId %d\n", questionId->valueint);
+     			char s_url[1024];
+     			sprintf(s_url, "curl.exe http://182.92.223.239:8102/quiz/get_answer?qid=%d", questionId->valueint);
+     			//printf("%s\n", s_url);
+				system(s_url);
+				printf("\n");
+     		}
+     		else{
+     			printf("%s\n", s_json);
+     		}
+     	}
+     	else{
+     		//printf("%s\n", s_json);
+     	}
+	    FILE *out_fp = fopen("lolking_quiz/quiz5.json", "ab");
+        fwrite(wb_data+2, sizeof(u_char), wb_len, out_fp);
+        fwrite("\n", sizeof(u_char), 1, out_fp);
+        fclose(out_fp);
     }
-
+	
 }
